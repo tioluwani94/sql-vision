@@ -12,7 +12,7 @@ export default async function DatabasesPage() {
   const session = await auth();
 
   const user = await prisma.user.findUnique({
-    where: { email: session?.user?.email },
+    where: { email: session?.user?.email ?? "" },
   });
 
   if (!user) {
@@ -88,6 +88,12 @@ export default async function DatabasesPage() {
                     <p>
                       <span className="font-medium">Database:</span> {db.dbName}
                     </p>
+                    {db.useSSH && (
+                      <p>
+                        <span className="font-medium">SSH:</span> {db.sshHost}:
+                        {db.sshPort || 22}
+                      </p>
+                    )}
                     <p>
                       <span className="font-medium">Added:</span>{" "}
                       {formatDate(db.createdAt)}

@@ -86,3 +86,48 @@ export function cleanSqlQuery(query: string): string {
   // Remove any trailing or leading whitespace
   return query.trim();
 }
+
+export function sanitizeErrorMessage(message: string): string {
+  // List of patterns to redact from error messages
+  const sensitivePatterns = [
+    { pattern: /(password|passwd|pwd)=\w+/gi, replacement: "$1=REDACTED" },
+    { pattern: /(user|username)=\w+/gi, replacement: "$1=REDACTED" },
+    {
+      pattern: /at\s+([A-Za-z]:)?[\\\/][\w\\\/\.-]+/g,
+      replacement: "at [path redacted]",
+    },
+    { pattern: /line\s+\d+(\:\d+)?/gi, replacement: "line [redacted]" },
+    {
+      pattern: /(connection|server|host|data source)[\s\=]+[\w\.\-\:]+/gi,
+      replacement: "$1=[redacted]",
+    },
+    {
+      pattern: /file\s+[\'\"]?[\w\-\.\\\/]+[\'\"]?/gi,
+      replacement: "file [redacted]",
+    },
+    {
+      pattern: /([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})/,
+      replacement: "[IP redacted]",
+    },
+  ];
+
+  let sanitized = message;
+
+  // Apply all redaction patterns
+  sensitivePatterns.forEach(({ pattern, replacement }) => {
+    sanitized = sanitized.replace(pattern, replacement);
+  });
+
+  // Provide generic errors for common database issues
+  if (
+    /permission denied|access denied|not authorized|privilege/i.test(message)
+  ) {
+    return "Database permission error: The query requires permissions that are not available";
+  }
+
+  if (/timeout|timed out/i.test(message)) {
+    return "Query timed out: The operation took too long to complete";
+  }
+
+  return sanitized;
+}

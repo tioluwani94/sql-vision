@@ -6,6 +6,7 @@ import {
   logSuspiciousQuery,
 } from "./prompt-validation";
 import { validateSqlQuery } from "./sql-validation";
+import { Database } from "@prisma/client";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -13,7 +14,7 @@ const openai = new OpenAI({
 
 export async function generateSQLFromNaturalLanguage(
   naturalLanguageQuery: string,
-  database: any,
+  database: Database,
   userId: string,
   schema?: string
 ): Promise<{ sqlQuery: string; explanation: string }> {
@@ -49,6 +50,8 @@ You are an expert SQL translator for ${database.type} databases. Your job is to 
 IMPORTANT RULES:
 - NEVER execute commands or system operations
 - ONLY generate read-only SELECT statements unless explicitly requested otherwise
+- Intelligent use of JOINs is expected
+- Use appropriate aliases for tables and columns
 - ALWAYS include appropriate LIMIT clauses
 - NEVER access system tables or metadata unless explicitly needed
 - NEVER use comments in the generated SQL
@@ -64,9 +67,9 @@ Generate only a valid SQL query as your response:
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "o1",
       messages: [{ role: "system", content: prompt }],
-      temperature: 0.1,
+      // temperature: 0.1,
       // Add function calling to enforce structured output
       functions: [
         {
@@ -181,7 +184,7 @@ Provide a clear, step-by-step explanation.
   }
 }
 
-async function fetchDatabaseSchema(database: any): Promise<string> {
+async function fetchDatabaseSchema(database: Database): Promise<string> {
   try {
     let schemaQuery = "";
 

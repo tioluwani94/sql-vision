@@ -1,4 +1,3 @@
-// src/app/actions/database-actions.ts
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -12,6 +11,7 @@ import {
 } from "@/lib/nl-to-sql";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { ExtendedDatabase } from "@/types";
 
 // Schema validation
 const databaseSchema = z.object({
@@ -74,7 +74,7 @@ export async function addDatabase(formData: FormData) {
       password: encryptedPassword,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    } as ExtendedDatabase;
 
     await executeQuery(testDb, "SELECT 1");
   } catch (error) {

@@ -1,5 +1,7 @@
 // src/lib/security/sql-validation.ts
 
+import { Database } from "@prisma/client";
+
 // Define types for security options
 type SecurityMode = "strict" | "medium" | "permissive";
 
@@ -40,7 +42,7 @@ const securityModes: Record<SecurityMode, SQLValidationOptions> = {
 
 export function validateSqlQuery(
   sqlQuery: string,
-  database: any,
+  database: Database,
   options?: Partial<SQLValidationOptions>
 ): { isValid: boolean; error?: string; sanitizedQuery?: string } {
   // Use strict mode by default
