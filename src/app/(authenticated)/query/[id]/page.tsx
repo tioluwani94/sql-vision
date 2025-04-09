@@ -12,15 +12,16 @@ import { SqlCodeBlock } from "@/components/query/sql-code-block";
 import { ExportButtons } from "@/components/query/export-buttons";
 
 interface QueryResultPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function QueryResultPage({
   params,
 }: QueryResultPageProps) {
-  const query = await getQueryById(params.id);
+  const { id } = await params;
+  const query = await getQueryById(id);
 
   // Parse the JSON result into a format usable by the components
   const results = {
@@ -48,10 +49,7 @@ export default async function QueryResultPage({
           <Link href={`/query/new?db=${query.databaseId}`}>
             <Button>New Query</Button>
           </Link>
-          <ExportButtons
-            results={query.result}
-            fileName={`query-${params.id}`}
-          />
+          <ExportButtons results={query.result} fileName={`query-${id}`} />
         </div>
       </div>
 

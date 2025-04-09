@@ -1,19 +1,17 @@
 // src/lib/db-connection.ts
-import { Pool, PoolClient } from "pg";
+import { QueryResult } from "@/types";
+import { Database } from "@prisma/client";
 import mysql from "mysql2/promise";
+import { Pool, PoolClient } from "pg";
 import { decrypt } from "./crypto";
 import { cleanSqlQuery, sanitizeErrorMessage } from "./utils";
-import { Database } from "@prisma/client";
-import { ExtendedDatabase, QueryResult } from "@/types";
 
 export async function executeQuery(
-  database: ExtendedDatabase,
+  database: Database,
   sqlQuery: string
 ): Promise<QueryResult> {
   // Clean the SQL query to remove any markdown formatting
   sqlQuery = cleanSqlQuery(sqlQuery);
-
-  console.log(sqlQuery);
 
   // Add timeout for query execution
   try {

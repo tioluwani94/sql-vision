@@ -1,17 +1,17 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { encrypt } from "@/lib/crypto";
 import { executeQuery } from "@/lib/db-connection";
 import {
-  generateSQLFromNaturalLanguage,
   generateChartConfiguration,
+  generateSQLFromNaturalLanguage,
 } from "@/lib/nl-to-sql";
+import { prisma } from "@/lib/prisma";
+import { Database } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
-import { ExtendedDatabase } from "@/types";
 
 // Schema validation
 const databaseSchema = z.object({
@@ -74,7 +74,7 @@ export async function addDatabase(formData: FormData) {
       password: encryptedPassword,
       createdAt: new Date(),
       updatedAt: new Date(),
-    } as ExtendedDatabase;
+    } as Database;
 
     await executeQuery(testDb, "SELECT 1");
   } catch (error) {

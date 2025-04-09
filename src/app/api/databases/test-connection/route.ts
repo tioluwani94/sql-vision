@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { encrypt } from "@/lib/crypto";
 import { executeQuery } from "@/lib/db-connection";
 import { rateLimit } from "@/lib/rate-limit";
+import { Database } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -21,18 +22,9 @@ const testConnectionSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
   dbName: z.string().min(1, "Database name is required"),
-  // ssl: z
-  //   .union([z.boolean(), z.enum(["on"])])
-  //   .transform((val) => val === true || val === "on"),
-  // useSSH: z
-  //   .union([z.boolean(), z.enum(["on", "true"])])
-  //   .transform((val) => val === true || val === "on" || val === "true"),
-  sshHost: z.string().optional(),
-  sshPort: z.coerce.number().int().positive().optional(),
-  sshUsername: z.string().optional(),
-  sshPassword: z.string().optional(),
-  sshPrivateKey: z.string().optional(),
-  sshPassphrase: z.string().optional(),
+  ssl: z
+    .union([z.boolean(), z.enum(["on"])])
+    .transform((val) => val === true || val === "on"),
 });
 
 export async function POST(req: NextRequest) {
@@ -86,42 +78,8 @@ export async function POST(req: NextRequest) {
 
     const validData = validationResult.data;
 
-    // Check SSH data requirements
-    if (validData.useSSH) {
-      if (!validData.sshHost) {
-        return NextResponse.json(
-          { message: "SSH Host is required when using SSH tunnel" },
-          { status: 400 }
-        );
-      }
-      if (!validData.sshUsername) {
-        return NextResponse.json(
-          { message: "SSH Username is required when using SSH tunnel" },
-          { status: 400 }
-        );
-      }
-      if (!validData.sshPassword && !validData.sshPrivateKey) {
-        return NextResponse.json(
-          {
-            message:
-              "Either SSH Password or Private Key is required for SSH authentication",
-          },
-          { status: 400 }
-        );
-      }
-    }
-
     // Encrypt sensitive data
     const encryptedPassword = encrypt(validData.password);
-    const encryptedSshPassword = validData.sshPassword
-      ? encrypt(validData.sshPassword)
-      : undefined;
-    const encryptedSshPrivateKey = validData.sshPrivateKey
-      ? encrypt(validData.sshPrivateKey)
-      : undefined;
-    const encryptedSshPassphrase = validData.sshPassphrase
-      ? encrypt(validData.sshPassphrase)
-      : undefined;
 
     // Create test database object
     const testDb = {
@@ -135,17 +93,10 @@ export async function POST(req: NextRequest) {
       password: encryptedPassword,
       dbName: validData.dbName,
       ssl: validData.ssl,
-      useSSH: validData.useSSH,
-      sshHost: validData.sshHost,
-      sshPort: validData.sshPort,
-      sshUsername: validData.sshUsername,
-      sshPassword: encryptedSshPassword,
-      sshPrivateKey: encryptedSshPrivateKey,
-      sshPassphrase: encryptedSshPassphrase,
       userId: session.user.id || "test-user",
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    } as Database;
 
     // Test connection
     const result = await executeQuery(testDb, "SELECT 1 AS test");

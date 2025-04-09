@@ -11,7 +11,7 @@ import { Download } from "lucide-react";
 import { downloadAsCSV, downloadAsJSON } from "@/lib/utils";
 
 interface ExportButtonsProps {
-  results: any[];
+  results: any[] | null;
   fileName: string;
 }
 
